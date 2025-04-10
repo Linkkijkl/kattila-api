@@ -1,18 +1,26 @@
-import os
+import os, secrets
 import aiofiles
 
-from fastapi import FastAPI, UploadFile, status
+from fastapi import FastAPI, Security, UploadFile, HTTPException, status
 from fastapi.responses import Response, FileResponse
+from fastapi.security import APIKeyHeader
 
 
 app = FastAPI()
 
 
 image_path = os.getenv("IMAGE_PATH")
+api_key_header = APIKeyHeader(name="X-API-Key")
+with open(os.getenv("IMAGE_API_KEY_FILE"), "r") as key_file:
+    # File leaves a trailing newline
+    IMAGE_API_KEY = key_file.read().rstrip('\n')
 
 
 @app.put("/coffee/image")
-async def update_coffee_image(file: UploadFile):
+async def update_coffee_image(file: UploadFile, key: str = Security(api_key_header)):
+    authorized = secrets.compare_digest(key, IMAGE_API_KEY)
+    if not authorized:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     async with aiofiles.open(image_path, "wb") as image_file:
         await image_file.write(await file.read())
     return Response(status_code=status.HTTP_204_NO_CONTENT)
