@@ -1,5 +1,12 @@
 # Kattila API
 
+## Contributing
+
+- Use rebase merges
+- Your commit messages should be quickly understandable, follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) guidelines
+- Keep your commits atomic and upstream branchnames simple
+- Delete your branches upstream when done working
+
 ## Development
 
 ```bash
