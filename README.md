@@ -9,10 +9,14 @@
 
 ## Development
 
+Preparing your development environment should be simple. Some steps are required while initialising your environment even when using docker. One is creating an API key into `apikey.txt`, this is so that no single default key exists. The command below can generate a garbled key for you.
+
 ```bash
 # Creating an API key
 dd if=/dev/urandom bs=32 count=1 2>/dev/null | base64 > apikey.txt
 ```
+
+### Docker compose
 
 ```bash
 # Starting a development build
