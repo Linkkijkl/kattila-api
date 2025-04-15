@@ -27,3 +27,9 @@ docker compose up --build --watch
 # Cleaning up
 docker compose down --remove-orphans
 ```
+
+### Testing in Docker
+
+```bash
+docker build -t kattila-api-test -f Dockerfile-run-tests --no-cache .
+```
