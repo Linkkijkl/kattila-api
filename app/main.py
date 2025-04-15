@@ -29,6 +29,6 @@ async def update_coffee_image(file: UploadFile, key: str = Security(api_key_head
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@app.get("/coffee/image")
+@app.get("/coffee/image", status_code=status.HTTP_200_OK)
 async def get_coffee_image():
     return FileResponse(path=image_path, media_type="image/png")
