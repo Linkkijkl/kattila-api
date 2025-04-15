@@ -1,0 +1,19 @@
+# This Dockerfile is meant for building and running tests, nothing more.445
+FROM python:3.13
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /code
+
+COPY ./requirements-test.txt /code/requirements-test.txt
+
+RUN uv pip install --system --no-cache-dir --upgrade -r /code/requirements-test.txt
+
+COPY ./app /code/app
+COPY ./tests /code/tests
+
+RUN mkdir -p /run/secrets
+RUN echo "TESTING_API_KEY" > /run/secrets/apikey
+
+ENV IMAGE_PATH="app/coffee-placeholder.png"
+
+RUN python -m unittest
