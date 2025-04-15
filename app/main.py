@@ -11,7 +11,10 @@ app = FastAPI()
 
 image_path = os.getenv("IMAGE_PATH")
 api_key_header = APIKeyHeader(name="X-API-Key")
-with open(os.getenv("IMAGE_API_KEY_FILE"), "r") as key_file:
+api_key_path = os.getenv("IMAGE_API_KEY_FILE")
+if not api_key_path:
+    api_key_path = "/run/secrets/apikey"
+with open(api_key_path, "r") as key_file:
     # File leaves a trailing newline
     IMAGE_API_KEY = key_file.read().rstrip('\n')
 
