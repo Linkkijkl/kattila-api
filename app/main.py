@@ -19,6 +19,11 @@ with open(api_key_path, "r") as key_file:
     IMAGE_API_KEY = key_file.read().rstrip('\n')
 
 
+@app.get("/")
+async def lifesign():
+    return Response(status_code=status.HTTP_200_OK)
+
+
 @app.put("/coffee/image")
 async def update_coffee_image(file: UploadFile, key: str = Security(api_key_header)):
     authorized = secrets.compare_digest(key, IMAGE_API_KEY)
