@@ -17,6 +17,11 @@ class TestKattilaApi(unittest.TestCase):
 
 
     def test_coffee_image_endpoint_exists(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+    def test_coffee_image_endpoint_exists(self):
         response = self.client.get("/coffee/image")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
