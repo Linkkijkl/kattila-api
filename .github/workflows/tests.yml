@@ -26,6 +26,5 @@ jobs:
               run: echo TESTING_API_KEY > apikey.txt
             - name: Test with unittest
               env:
-                IMAGE_PATH: app/coffee-placeholder.png
-                IMAGE_API_KEY_FILE: apikey.txt
+                API_KEY_FILE: apikey.txt
               run: python -m unittest
