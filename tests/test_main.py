@@ -47,7 +47,7 @@ class TestKattilaApi(unittest.TestCase):
         self.assertEqual(response.json(), {"detail": "Unauthorized"})
 
 
-    def test_coffee_image_endpoint_put_wrong_api_key_headers(self):
+    def test_coffee_image_endpoint_put_correct_api_key_headers(self):
         img = Image.new('RGB', (600, 800), color = 'white')
         headers = {"X-API-Key": "TESTING_API_KEY"}
         files={"file": ("filename", img.tobytes(), "image/jpeg")}
