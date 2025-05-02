@@ -1,4 +1,7 @@
 {
     "image": "mcr.microsoft.com/vscode/devcontainers/python:bullseye",
-    "postCreateCommand": "dd if=/dev/urandom bs=32 count=1 2>/dev/null | base64 > apikey.txt"
+    "postCreateCommand": "echo key > apikey.txt",
+    "containerEnv": {
+        "API_KEY_FILE": "apikey.txt"
+    }
 }

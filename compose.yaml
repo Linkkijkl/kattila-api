@@ -1,8 +1,5 @@
 services:
   kattila-api:
-    environment:
-      IMAGE_API_KEY_FILE: /run/secrets/apikey
-      IMAGE_PATH: app/coffee-placeholder.png
     build: .
     container_name: kattila-api
     ports:

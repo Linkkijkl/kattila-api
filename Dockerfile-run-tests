@@ -14,6 +14,4 @@ COPY ./tests /code/tests
 RUN mkdir -p /run/secrets
 RUN echo "TESTING_API_KEY" > /run/secrets/apikey
 
-ENV IMAGE_PATH="app/coffee-placeholder.png"
-
 RUN python -m unittest
