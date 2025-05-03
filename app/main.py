@@ -48,8 +48,8 @@ async def update_coffee_image(file: UploadFile, key: str = Security(api_key_head
         )
     extension = file.content_type.split("/")[-1]
 
-    for file in os.scandir(path=coffee_dir):
-        os.remove(file)
+    for dir_entry in os.scandir(path=coffee_dir):
+        os.remove(dir_entry)
 
     image_path = os.path.join(coffee_dir, f"image.{extension}")
     async with aiofiles.open(image_path, "wb") as image_file:
