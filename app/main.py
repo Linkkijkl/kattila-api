@@ -1,10 +1,10 @@
 import os, secrets
 import aiofiles
 
-from fastapi import FastAPI, Security, UploadFile, HTTPException, status
+from fastapi import FastAPI, Security, UploadFile, HTTPException, status, WebSocket
 from fastapi.responses import Response, FileResponse
 from fastapi.security import APIKeyHeader
-
+from watchfiles import awatch
 from app.seuranta import SeurantaUser, SeurantaUsers
 
 app = FastAPI()
@@ -21,6 +21,9 @@ COFFEE_SUBDIR = "coffee"
 coffee_dir = os.path.join(data_dir, COFFEE_SUBDIR)
 if not os.path.exists(coffee_dir):
     os.mkdir(coffee_dir)
+
+ANNOUNCER_FILE = "announcer"
+announcer_path = os.path.join(data_dir, ANNOUNCER_FILE)
 
 api_key_header = APIKeyHeader(name="X-API-Key")
 if not (api_key_path := os.getenv("API_KEY_FILE")):
@@ -84,3 +87,18 @@ async def get_coffee_image():
         image_path = COFFEE_PLACEHOLDER_PATH
 
     return FileResponse(path=image_path)
+
+
+@app.get("/announcer/new")
+async def new_message(msg: str):
+    async with aiofiles.open(announcer_path, "w") as file:
+        await file.write(msg)
+
+
+@app.websocket("/announcer/listen")
+async def listen_messages(websocket: WebSocket):
+    await websocket.accept()
+    async for _ in awatch(announcer_path):
+        async with aiofiles.open(announcer_path, "r") as file:
+            message = await file.read()
+            await websocket.send_text(message)
