@@ -39,12 +39,12 @@ async def update_coffee_image(file: UploadFile, key: str = Security(api_key_head
     authorized = secrets.compare_digest(key, api_key)
     if not authorized:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    
+
     ACCEPTED_FILE_TYPES = ["image/jpeg", "image/webp", "image/png"]
     if not file.content_type in ACCEPTED_FILE_TYPES:
         return Response(
             content=f"Bad content type. Accepted types are: {ACCEPTED_FILE_TYPES}",
-            status_code=status.HTTP_400_BAD_REQUEST
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
     extension = file.content_type.split("/")[-1]
 
