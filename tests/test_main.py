@@ -47,6 +47,13 @@ class TestKattilaApi(unittest.TestCase):
         response = self.client.put("/coffee/image", headers=headers, files=files)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
+    def test_coffee_image_endpoint_incorrect_media_type(self):
+        img = Image.new("RGB", (600, 800), color="white")
+        headers = {"X-API-Key": "TESTING_API_KEY"}
+        files = {"file": ("filename", img.tobytes(), "image/example")}
+        response = self.client.put("/coffee/image", headers=headers, files=files)
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
