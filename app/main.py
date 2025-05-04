@@ -44,7 +44,7 @@ async def update_coffee_image(file: UploadFile, key: str = Security(api_key_head
     if not file.content_type in ACCEPTED_FILE_TYPES:
         return Response(
             content=f"Bad content type. Accepted types are: {ACCEPTED_FILE_TYPES}",
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
         )
     extension = file.content_type.split("/")[-1]
 
