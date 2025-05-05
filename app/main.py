@@ -5,9 +5,11 @@ from fastapi import FastAPI, Security, UploadFile, HTTPException, status
 from fastapi.responses import Response, FileResponse
 from fastapi.security import APIKeyHeader
 
+from app.seuranta import SeurantaUser, SeurantaUsers
 
 app = FastAPI()
 
+seuranta_users: SeurantaUsers = SeurantaUsers()
 
 data_dir = os.getenv("DATA_DIR")
 if not data_dir:
@@ -31,6 +33,21 @@ with open(api_key_path, "r") as key_file:
 @app.get("/")
 async def lifesign():
     return Response(status_code=status.HTTP_200_OK)
+
+
+@app.get("/seuranta/users", status_code=status.HTTP_200_OK)
+async def get_seuranta_users():
+    return seuranta_users
+
+
+@app.put("/seuranta/users", status_code=status.HTTP_200_OK)
+async def put_seuranta_users(users: SeurantaUsers, key: str = Security(api_key_header)):
+    authorized = secrets.compare_digest(key, api_key)
+    if not authorized:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    seuranta_users = users
+    return seuranta_users
 
 
 @app.put("/coffee/image")
