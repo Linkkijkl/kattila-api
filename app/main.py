@@ -21,8 +21,7 @@ if not os.path.exists(coffee_dir):
     os.mkdir(coffee_dir)
 
 api_key_header = APIKeyHeader(name="X-API-Key")
-api_key_path = os.getenv("API_KEY_FILE")
-if not api_key_path:
+if not (api_key_path := os.getenv("API_KEY_FILE")):
     api_key_path = "/run/secrets/apikey"
 with open(api_key_path, "r") as key_file:
     # File leaves a trailing newline
