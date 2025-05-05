@@ -6,7 +6,13 @@ from app.main import app
 from PIL import Image, ImageChops
 
 
-class TestKattilaApi(unittest.TestCase):
+class TestKattilaLifesignApi(unittest.TestCase):
+    def test_lifesign_endpoint_exists(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestKattilaCoffeeImageApi(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pass
@@ -19,10 +25,6 @@ class TestKattilaApi(unittest.TestCase):
             self.test_white_image_bytes_png = BytesIO()
             self.test_white_image.save(self.test_white_image_bytes_png, "png")
             self.test_white_image_file = {"file": ("filename", self.test_white_image_bytes_png, "image/png")}
-
-    def test_lifesign_endpoint_exists(self):
-        response = self.client.get("/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_coffee_image_endpoint_exists(self):
         response = self.client.get("/coffee/image")
