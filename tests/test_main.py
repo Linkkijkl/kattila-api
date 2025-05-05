@@ -3,6 +3,7 @@ from io import BytesIO
 from fastapi import status
 from fastapi.testclient import TestClient
 from app.main import app
+from app.seuranta import SeurantaUser, SeurantaUsers
 from PIL import Image, ImageChops
 
 
@@ -14,6 +15,93 @@ class TestKattilaLifesignApi(unittest.TestCase):
     def test_lifesign_endpoint_exists(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestKattilaSeurantaApi(unittest.TestCase):
+    def setUp(self) -> None:
+        with TestClient(app) as client:
+            self.client = client
+            self.testing_headers = {"X-API-Key": "TESTING_API_KEY"}
+            self.testing_seuranta_users: SeurantaUsers = SeurantaUsers(
+                users=[
+                    SeurantaUser(
+                        username="KariLink",
+                        memberships=["linkki"],
+                        board_memberships=["linkki"],
+                    ),
+                    SeurantaUser(
+                        username="LaineAlgo",
+                        memberships=["algo"],
+                        board_memberships=["algo"],
+                    ),
+                    SeurantaUser(
+                        username="hybridi",
+                        memberships=["algo", "linkki"],
+                        board_memberships=["algo", "linkki"],
+                    ),
+                    SeurantaUser(
+                        username="basic", memberships=[], board_memberships=[]
+                    ),
+                    SeurantaUser(username="empty"),
+                    SeurantaUser(
+                        username="howlmao", board_memberships=["algo", "linkki"]
+                    ),
+                ]
+            )
+
+    def test_seuranta_endpoint_exists(self):
+        response = self.client.get("/seuranta/users")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_seuranta_endpoint_post_not_allowed(self):
+        response = self.client.post(
+            "/seuranta/users",
+            content=self.testing_seuranta_users.model_dump_json(),
+            headers=self.testing_headers,
+        )
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(response.json(), {"detail": "Method Not Allowed"})
+
+    def test_seuranta_endpoint_put_missing_api_key_headers(self):
+        response = self.client.put(
+            "/seuranta/users", content=self.testing_seuranta_users.model_dump_json()
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json(), {"detail": "Not authenticated"})
+
+    def test_seuranta_endpoint_put_wrong_api_key_headers(self):
+        incorrect_headers = {"X-API-Key": "UNAUTHORIZED_KEY"}
+        response = self.client.put(
+            "/seuranta/users",
+            content=self.testing_seuranta_users.model_dump_json(),
+            headers=incorrect_headers,
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json(), {"detail": "Unauthorized"})
+
+    def test_seuranta_endpoint_put_correct_api_key_headers(self):
+        response = self.client.put(
+            "/seuranta/users",
+            content=self.testing_seuranta_users.model_dump_json(),
+            headers=self.testing_headers,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_seuranta_endpoint_users_updates(self):
+        self.client.put(
+            "/seuranta/users",
+            json={"users": []},
+            headers=self.testing_headers,
+        )
+        initial_response = self.client.get("/seuranta/users")
+        put_response = self.client.put(
+            "/seuranta/users",
+            content=self.testing_seuranta_users.model_dump_json(),
+            headers=self.testing_headers,
+        )
+        self.assertNotEqual(initial_response.json(), put_response.json())
+        final_response = self.client.get("/seuranta/users")
+        self.assertEqual(put_response.json(), final_response.json())
 
 
 class TestKattilaCoffeeImageApi(unittest.TestCase):

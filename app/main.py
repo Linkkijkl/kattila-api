@@ -46,7 +46,7 @@ async def put_seuranta_users(users: SeurantaUsers, key: str = Security(api_key_h
     if not authorized:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    seuranta_users = users
+    seuranta_users.users = users.users
     return seuranta_users
 
 
