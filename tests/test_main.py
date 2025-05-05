@@ -7,6 +7,10 @@ from PIL import Image, ImageChops
 
 
 class TestKattilaLifesignApi(unittest.TestCase):
+    def setUp(self) -> None:
+        with TestClient(app) as client:
+            self.client = client
+
     def test_lifesign_endpoint_exists(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
