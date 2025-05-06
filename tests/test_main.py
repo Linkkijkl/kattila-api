@@ -170,7 +170,7 @@ class TestKattilaCoffeeImageApi(unittest.TestCase):
         response = self.client.get("/coffee/image")
         received_image = Image.open(BytesIO(response.content))
         images_same = (
-            ImageChops.difference(self.test_white_image, received_image).getbbox() == 0
+            ImageChops.difference(self.test_white_image, received_image).getbbox() == None
         )
         self.assertTrue(images_same)
 
