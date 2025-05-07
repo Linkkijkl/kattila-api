@@ -175,5 +175,23 @@ class TestKattilaCoffeeImageApi(unittest.TestCase):
         self.assertTrue(images_same)
 
 
+class TestKattilaAnnouncerApi(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        pass
+
+    def setUp(self) -> None:
+        with TestClient(app) as client1, TestClient(app) as client2:
+            self.client1 = client1
+            self.client2 = client2
+
+    def test_publish_subscibe(self):
+        with self.client1.websocket_connect("/announcer/listen") as websocket:
+            test_message = "testiviesti :-D"
+            self.client2.get("/announcer/new", params={"msg": test_message})
+            received_message = websocket.receive_text()
+            assert received_message == test_message
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

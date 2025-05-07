@@ -49,9 +49,11 @@ def init_api_key(name, default):
 
 
 # Initialize paths and api-key.
-DATA_DIR                = init_dir("DATA_DIR", "/tmp/data")
-COFFEE_DIR              = init_dir("COFFEE_DIR", "coffee", parent=DATA_DIR)
+DATA_DIR = init_dir("DATA_DIR", "/tmp/data")
+COFFEE_DIR = init_dir("COFFEE_DIR", "coffee", parent=DATA_DIR)
 API_KEY_HEADER, API_KEY = init_api_key("API_KEY_FILE", "/run/secrets/apikey")
+ANNOUNCER_FILE = "announcer"
+ANNOUNCER_PATH = os.path.join(DATA_DIR, ANNOUNCER_FILE)
 
 
 @app.get("/")
@@ -112,14 +114,18 @@ async def get_coffee_image():
 
 @app.get("/announcer/new")
 async def new_message(msg: str):
-    async with aiofiles.open(announcer_path, "w") as file:
+    async with aiofiles.open(ANNOUNCER_PATH, "w") as file:
         await file.write(msg)
 
 
 @app.websocket("/announcer/listen")
 async def listen_messages(websocket: WebSocket):
+    if not os.path.exists(ANNOUNCER_PATH):
+        async with aiofiles.open(ANNOUNCER_PATH, "w") as file:
+            await file.write("")
+
     await websocket.accept()
-    async for _ in awatch(announcer_path):
-        async with aiofiles.open(announcer_path, "r") as file:
+    async for _ in awatch(ANNOUNCER_PATH):
+        async with aiofiles.open(ANNOUNCER_PATH, "r") as file:
             message = await file.read()
             await websocket.send_text(message)
