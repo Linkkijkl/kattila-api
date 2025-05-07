@@ -32,7 +32,7 @@ def init_dir(name: str, default: str, parent=None):
     return dirc
 
 
-def init_API_KEYs(name, default):
+def init_api_key(name, default):
     """Initializing an api-key.
 
     Returns:
@@ -50,7 +50,7 @@ def init_API_KEYs(name, default):
 # Initialize paths and api-key.
 DATA_DIR                = init_dir("DATA_DIR", "/tmp/data")
 COFFEE_DIR              = init_dir("COFFEE_DIR", "coffee", parent=DATA_DIR)
-API_KEY_HEADER, API_KEY = init_API_KEYs("API_KEY_FILE", "/run/secrets/apikey")
+API_KEY_HEADER, API_KEY = init_api_key("API_KEY_FILE", "/run/secrets/apikey")
 
 @app.get("/")
 async def lifesign():
