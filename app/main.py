@@ -40,7 +40,7 @@ def init_api_key(name, default):
     """
     header = APIKeyHeader(name="X-API-Key")
     if not (path := os.getenv(name)):
-        path = "/run/secrets/apikey"
+        path = default
     with open(path, "r") as key_file:
         # File leaves a trailing newline
         key = key_file.read().strip()
