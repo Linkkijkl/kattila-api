@@ -5,10 +5,29 @@ import aiofiles
 from fastapi import FastAPI, Security, UploadFile, HTTPException, status, WebSocket
 from fastapi.responses import Response, FileResponse
 from fastapi.security import APIKeyHeader
+from fastapi.middleware.cors import CORSMiddleware
 from watchfiles import awatch
 from app.seuranta import SeurantaUser, SeurantaUsers
 
 app = FastAPI()
+
+origins = [
+    "http://linkkijkl.fi",
+    "https://linkkijkl.fi",
+    "http://kattila.linkkijkl.fi",
+    "https://kattila.linkkijkl.fi",
+    "http://localhost",
+    "http://localhost:5000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 seuranta_users: SeurantaUsers = SeurantaUsers()
 
 
