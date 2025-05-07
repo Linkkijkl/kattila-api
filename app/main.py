@@ -1,3 +1,4 @@
+"""Brief: FAST-API based microservice for the Kattila happenings."""
 import os, secrets
 import aiofiles
 
@@ -8,27 +9,48 @@ from fastapi.security import APIKeyHeader
 from app.seuranta import SeurantaUser, SeurantaUsers
 
 app = FastAPI()
-
 seuranta_users: SeurantaUsers = SeurantaUsers()
 
-data_dir = os.getenv("DATA_DIR")
-if not data_dir:
-    data_dir = "/tmp/data"
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
+def init_dir(name: str, default: str, parent=None):
+    """Initializing a directory.
 
-COFFEE_SUBDIR = "coffee"
-coffee_dir = os.path.join(data_dir, COFFEE_SUBDIR)
-if not os.path.exists(coffee_dir):
-    os.mkdir(coffee_dir)
+    Brief:
+        Create a directory dictated by the environment variable called `name`
+        or default is such a variable is not found. Insert parent path at the
+        beginning if given.
 
-api_key_header = APIKeyHeader(name="X-API-Key")
-if not (api_key_path := os.getenv("API_KEY_FILE")):
-    api_key_path = "/run/secrets/apikey"
-with open(api_key_path, "r") as key_file:
-    # File leaves a trailing newline
-    api_key = key_file.read().strip()
+    Returns:
+        A string containing the path to the created directory.
+    """
+    dirc = os.getenv(name)
+    if dirc is None:
+        dirc = default
+    if parent is not None:
+        dirc = os.path.join(parent, dirc)
+    if not os.path.exists(dirc):
+        os.makedirs(dirc)
+    return dirc
 
+
+def init_API_KEYs(name, default):
+    """Initializing an api-key.
+
+    Returns:
+        A tuple containing the api-key-header and api-key respectively.
+    """
+    header = APIKeyHeader(name="X-API-Key")
+    if not (path := os.getenv(name)):
+        path = "/run/secrets/apikey"
+    with open(path, "r") as key_file:
+        # File leaves a trailing newline
+        key = key_file.read().strip()
+    return header, key
+
+
+# Initialize paths and api-key.
+DATA_DIR                = init_dir("DATA_DIR", "/tmp/data")
+COFFEE_DIR              = init_dir("COFFEE_DIR", "coffee", parent=DATA_DIR)
+API_KEY_HEADER, API_KEY = init_API_KEYs("API_KEY_FILE", "/run/secrets/apikey")
 
 @app.get("/")
 async def lifesign():
@@ -41,8 +63,8 @@ async def get_seuranta_users():
 
 
 @app.put("/seuranta/users", status_code=status.HTTP_200_OK)
-async def put_seuranta_users(users: SeurantaUsers, key: str = Security(api_key_header)):
-    authorized = secrets.compare_digest(key, api_key)
+async def put_seuranta_users(users: SeurantaUsers, key: str = Security(API_KEY_HEADER)):
+    authorized = secrets.compare_digest(key, API_KEY)
     if not authorized:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -51,8 +73,8 @@ async def put_seuranta_users(users: SeurantaUsers, key: str = Security(api_key_h
 
 
 @app.put("/coffee/image")
-async def update_coffee_image(file: UploadFile, key: str = Security(api_key_header)):
-    authorized = secrets.compare_digest(key, api_key)
+async def update_coffee_image(file: UploadFile, key: str = Security(API_KEY_HEADER)):
+    authorized = secrets.compare_digest(key, API_KEY)
     if not authorized:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -64,10 +86,10 @@ async def update_coffee_image(file: UploadFile, key: str = Security(api_key_head
         )
     extension = file.content_type.split("/")[-1]
 
-    for dir_entry in os.scandir(path=coffee_dir):
+    for dir_entry in os.scandir(path=COFFEE_DIR):
         os.remove(dir_entry)
 
-    image_path = os.path.join(coffee_dir, f"image.{extension}")
+    image_path = os.path.join(COFFEE_DIR, f"image.{extension}")
     async with aiofiles.open(image_path, "wb") as image_file:
         await image_file.write(await file.read())
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -78,7 +100,7 @@ async def get_coffee_image():
     COFFEE_PLACEHOLDER_PATH = "app/coffee-placeholder.png"
 
     image_path = None
-    for file in os.scandir(path=coffee_dir):
+    for file in os.scandir(path=COFFEE_DIR):
         image_path = file
     if not image_path:
         image_path = COFFEE_PLACEHOLDER_PATH
