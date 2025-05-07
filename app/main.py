@@ -2,14 +2,15 @@
 import os, secrets
 import aiofiles
 
-from fastapi import FastAPI, Security, UploadFile, HTTPException, status
+from fastapi import FastAPI, Security, UploadFile, HTTPException, status, WebSocket
 from fastapi.responses import Response, FileResponse
 from fastapi.security import APIKeyHeader
-
+from watchfiles import awatch
 from app.seuranta import SeurantaUser, SeurantaUsers
 
 app = FastAPI()
 seuranta_users: SeurantaUsers = SeurantaUsers()
+
 
 def init_dir(name: str, default: str, parent=None):
     """Initializing a directory.
@@ -51,6 +52,7 @@ def init_api_key(name, default):
 DATA_DIR                = init_dir("DATA_DIR", "/tmp/data")
 COFFEE_DIR              = init_dir("COFFEE_DIR", "coffee", parent=DATA_DIR)
 API_KEY_HEADER, API_KEY = init_api_key("API_KEY_FILE", "/run/secrets/apikey")
+
 
 @app.get("/")
 async def lifesign():
@@ -106,3 +108,18 @@ async def get_coffee_image():
         image_path = COFFEE_PLACEHOLDER_PATH
 
     return FileResponse(path=image_path)
+
+
+@app.get("/announcer/new")
+async def new_message(msg: str):
+    async with aiofiles.open(announcer_path, "w") as file:
+        await file.write(msg)
+
+
+@app.websocket("/announcer/listen")
+async def listen_messages(websocket: WebSocket):
+    await websocket.accept()
+    async for _ in awatch(announcer_path):
+        async with aiofiles.open(announcer_path, "r") as file:
+            message = await file.read()
+            await websocket.send_text(message)
