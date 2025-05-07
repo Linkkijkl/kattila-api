@@ -119,8 +119,8 @@ async def new_message(msg: str):
 
 @app.websocket("/announcer/listen")
 async def listen_messages(websocket: WebSocket):
-    if not os.path.exists(announcer_path):
-        async with aiofiles.open(announcer_path, "w") as file:
+    if not os.path.exists(ANNOUNCER_PATH):
+        async with aiofiles.open(ANNOUNCER_PATH, "w") as file:
             await file.write("")
 
     await websocket.accept()
