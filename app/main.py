@@ -7,6 +7,7 @@ from fastapi.responses import Response, FileResponse
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from watchfiles import awatch
+from queue import Queue
 from app.seuranta import SeurantaUser, SeurantaUsers
 
 app = FastAPI()
@@ -77,6 +78,16 @@ ANNOUNCER_PATH = os.path.join(DATA_DIR, ANNOUNCER_FILE)
 @app.get("/")
 async def lifesign():
     return Response(status_code=status.HTTP_200_OK)
+
+
+@app.get("/interested/amount", status_code=status.HTTP_200_OK)
+async def get_interested_amount():
+    return 0
+
+
+@app.get("/interested/max", status_code=status.HTTP_200_OK)
+async def get_interested_max():
+    return INTERESTED_MAX
 
 
 @app.get("/seuranta/users", status_code=status.HTTP_200_OK)
