@@ -187,10 +187,10 @@ class TestKattilaAnnouncerApi(unittest.TestCase):
 
     def test_publish_subscibe(self):
         with self.client1.websocket_connect("/announcer/listen") as websocket:
-            test_message = "testiviesti :-D"
-            self.client2.get("/announcer/new", params={"msg": test_message})
-            received_message = websocket.receive_text()
-            assert received_message == test_message
+            for test_message in ["test-message :-D", "another one", "keep on testing"]:
+                self.client2.get("/announcer/new", params={"msg": test_message})
+                received_message = websocket.receive_text()
+                assert received_message == test_message
 
 
 if __name__ == "__main__":
