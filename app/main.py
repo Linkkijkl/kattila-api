@@ -12,6 +12,8 @@ from app.seuranta import SeurantaUser, SeurantaUsers
 
 app = FastAPI()
 
+INTERESTED_MAX = 10
+
 origins = [
     "http://linkkijkl.fi",
     "https://linkkijkl.fi",
@@ -77,6 +79,11 @@ ANNOUNCER_PATH = os.path.join(DATA_DIR, ANNOUNCER_FILE)
 
 @app.get("/")
 async def lifesign():
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@app.post("/interested")
+async def post_interested():
     return Response(status_code=status.HTTP_200_OK)
 
 
