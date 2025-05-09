@@ -1,5 +1,5 @@
 """Brief: FAST-API based microservice for the Kattila happenings."""
-import os, secrets
+import os, secrets, time
 import aiofiles
 
 from fastapi import FastAPI, Security, UploadFile, HTTPException, status, WebSocket
@@ -11,8 +11,6 @@ from queue import Queue
 from app.seuranta import SeurantaUser, SeurantaUsers
 
 app = FastAPI()
-
-INTERESTED_MAX = 10
 
 origins = [
     "http://linkkijkl.fi",
@@ -32,6 +30,17 @@ app.add_middleware(
 )
 
 seuranta_users: SeurantaUsers = SeurantaUsers()
+
+INTERESTED_MAX = 10
+interested: Queue[float] = Queue(INTERESTED_MAX)
+
+
+async def refresh_interested(interested: Queue[float]):
+    # Queue's get() method pops the queue's next item, and there is
+    # no peek method this is why q.queue[0] is checked this way.
+    while not interested.empty() \
+        and time.time() - interested.queue[0] > 15*60:
+        interested.get()
 
 
 def init_dir(name: str, default: str, parent=None):
@@ -84,12 +93,14 @@ async def lifesign():
 
 @app.post("/interested")
 async def post_interested():
+    interested.put(time.time())
     return Response(status_code=status.HTTP_200_OK)
 
 
 @app.get("/interested/amount", status_code=status.HTTP_200_OK)
 async def get_interested_amount():
-    return 0
+    await refresh_interested(interested)
+    return interested.qsize()
 
 
 @app.get("/interested/max", status_code=status.HTTP_200_OK)
