@@ -74,10 +74,10 @@ async def lifesign():
     return Response(status_code=status.HTTP_200_OK)
 
 
-@app.post("/interested")
+@app.post("/interested", status_code=status.HTTP_200_OK)
 async def post_interested():
     interested.put(time.time())
-    return Response(status_code=status.HTTP_200_OK)
+    return interested.qsize()
 
 
 @app.get("/interested/amount", status_code=status.HTTP_200_OK)
