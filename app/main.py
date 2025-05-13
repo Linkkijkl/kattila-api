@@ -7,7 +7,6 @@ from fastapi.responses import Response, FileResponse
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from watchfiles import awatch
-from queue import Queue
 from app.seuranta import SeurantaUser, SeurantaUsers
 
 app = FastAPI()
@@ -15,15 +14,14 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"])
 seuranta_users: SeurantaUsers = SeurantaUsers()
 
 INTERESTED_MAX = 10
-interested: Queue[float] = Queue(INTERESTED_MAX)
+INTERESTED_TIMEOUT = 15 * 60
+interested = []
 
 
-async def refresh_interested(interested: Queue[float]):
-    # Queue's get() method pops the queue's next item, and there is
-    # no peek method this is why q.queue[0] is checked this way.
-    while not interested.empty() \
-        and time.time() - interested.queue[0] > 15*60:
-        interested.get()
+async def refresh_interested(interested):
+    while len(interested) != 0 \
+        and time.time() - interested[0] > INTERESTED_TIMEOUT:
+        interested.pop(0)
 
 
 def init_dir(name: str, default: str, parent=None):
@@ -76,14 +74,16 @@ async def lifesign():
 
 @app.post("/interested", status_code=status.HTTP_200_OK)
 async def post_interested():
-    interested.put(time.time())
-    return interested.qsize()
+    if (len(interested) >= INTERESTED_MAX):
+        return INTERESTED_MAX
+    interested.append(time.time())
+    return len(interested)
 
 
 @app.get("/interested/amount", status_code=status.HTTP_200_OK)
 async def get_interested_amount():
     await refresh_interested(interested)
-    return interested.qsize()
+    return len(interested)
 
 
 @app.get("/interested/max", status_code=status.HTTP_200_OK)
