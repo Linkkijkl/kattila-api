@@ -1,13 +1,20 @@
 """Brief: FAST-API based microservice for the Kattila happenings."""
 import os, secrets, time
 import aiofiles
+from typing import AsyncIterator, Annotated
 
-from fastapi import FastAPI, Security, UploadFile, HTTPException, status, WebSocket
+from fastapi import FastAPI, Security, UploadFile, HTTPException, status, WebSocket, Depends
 from fastapi.responses import Response, FileResponse
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
-from watchfiles import awatch
+import redis.asyncio as redis
 from app.seuranta import SeurantaUser, SeurantaUsers
+
+async def redis_connection() -> AsyncIterator[redis.Redis]:
+    async with redis.from_url("redis://127.0.0.1") as conn:
+        yield conn
+
+PoolConnectionDep = Annotated[redis.Redis, Depends(redis_connection)]
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
@@ -142,20 +149,22 @@ async def get_coffee_image():
     return FileResponse(path=image_path)
 
 
+ANNOUNCER_CHANNEL = "announcer"
+
+
 @app.get("/announcer/new")
-async def new_message(msg: str):
-    async with aiofiles.open(ANNOUNCER_PATH, "w") as file:
-        await file.write(msg)
+async def new_message(msg: str, redis_conn: Annotated[PoolConnectionDep, redis_connection]):
+    await redis_conn.publish(ANNOUNCER_CHANNEL, msg)
 
 
 @app.websocket("/announcer/listen")
-async def listen_messages(websocket: WebSocket):
-    if not os.path.exists(ANNOUNCER_PATH):
-        async with aiofiles.open(ANNOUNCER_PATH, "w") as file:
-            await file.write("")
-
+async def listen_messages(websocket: WebSocket, redis_conn: Annotated[PoolConnectionDep, redis_connection]):
     await websocket.accept()
-    async for _ in awatch(ANNOUNCER_PATH):
-        async with aiofiles.open(ANNOUNCER_PATH, "r") as file:
-            message = await file.read()
-            await websocket.send_text(message)
+
+    async with redis_conn.pubsub() as pubsub:
+        await pubsub.subscribe(ANNOUNCER_CHANNEL)
+        async for message in pubsub.listen():
+            if not message or type(message["data"]) != bytes:
+                continue
+            decoded_message = message["data"].decode()
+            await websocket.send_text(decoded_message)

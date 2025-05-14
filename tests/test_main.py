@@ -185,7 +185,7 @@ class TestKattilaAnnouncerApi(unittest.TestCase):
             self.client1 = client1
             self.client2 = client2
 
-    def test_publish_subscibe(self):
+    def test_publish_subscribe(self):
         with self.client1.websocket_connect("/announcer/listen") as websocket:
             for test_message in ["test-message :-D", "another one", "keep on testing"]:
                 self.client2.get("/announcer/new", params={"msg": test_message})
