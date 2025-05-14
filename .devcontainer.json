@@ -3,5 +3,12 @@
     "postCreateCommand": "echo TESTING_API_KEY > apikey.txt",
     "containerEnv": {
         "API_KEY_FILE": "apikey.txt"
+    },
+    "features": {
+        "docker-in-docker": {
+            "version": "latest",
+            "moby": true,
+            "dockerDashComposeVersion": "v1"
+        }
     }
 }
