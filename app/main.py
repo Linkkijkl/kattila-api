@@ -8,10 +8,14 @@ from fastapi.responses import Response, FileResponse
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 import redis.asyncio as redis
-from app.seuranta import SeurantaUser, SeurantaUsers
+from app.seuranta import SeurantaUsers
+
+redis_url = os.getenv("REDIS_URL")
+if not redis_url:
+    redis_url = "redis://redis"
 
 async def redis_connection() -> AsyncIterator[redis.Redis]:
-    async with redis.from_url("redis://127.0.0.1") as conn:
+    async with redis.from_url(redis_url) as conn:
         yield conn
 
 PoolConnectionDep = Annotated[redis.Redis, Depends(redis_connection)]
@@ -23,7 +27,6 @@ seuranta_users: SeurantaUsers = SeurantaUsers()
 INTERESTED_MAX = 10
 INTERESTED_TIMEOUT = 15 * 60
 interested = []
-
 
 async def refresh_interested(interested):
     while len(interested) != 0 \
