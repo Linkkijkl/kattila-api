@@ -9,7 +9,6 @@
             "version": "latest",
             "moby": true,
             "dockerDashComposeVersion": "v1"
-        },
-        "ghcr.io/itsmechlark/features/redis-server:1": {}
+        }
     }
 }

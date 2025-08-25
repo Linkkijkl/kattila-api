@@ -10,8 +10,6 @@ services:
           path: .
     secrets:
       - apikey
-  redis:
-    image: redis
 
 secrets:
   apikey:

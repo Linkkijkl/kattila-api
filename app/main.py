@@ -1,24 +1,13 @@
 """Brief: FAST-API based microservice for the Kattila happenings."""
 import os, secrets, time
-import aiofiles
-from typing import AsyncIterator, Annotated
 
 from fastapi import FastAPI, Security, UploadFile, HTTPException, status, WebSocket, Depends
 from fastapi.responses import Response, FileResponse
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
-import redis.asyncio as redis
 from app.seuranta import SeurantaUsers
-
-redis_url = os.getenv("REDIS_URL")
-if not redis_url:
-    redis_url = "redis://redis"
-
-async def redis_connection() -> AsyncIterator[redis.Redis]:
-    async with redis.from_url(redis_url) as conn:
-        yield conn
-
-PoolConnectionDep = Annotated[redis.Redis, Depends(redis_connection)]
+import aiofiles
+import asyncio
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
@@ -27,11 +16,6 @@ seuranta_users: SeurantaUsers = SeurantaUsers()
 INTERESTED_MAX = 10
 INTERESTED_TIMEOUT = 15 * 60
 interested = []
-
-async def refresh_interested(interested):
-    while len(interested) != 0 \
-        and time.time() - interested[0] > INTERESTED_TIMEOUT:
-        interested.pop(0)
 
 
 def init_dir(name: str, default: str, parent=None):
@@ -74,25 +58,31 @@ def init_api_key(name, default):
 DATA_DIR = init_dir("DATA_DIR", "/tmp/data")
 COFFEE_DIR = init_dir("COFFEE_DIR", "coffee", parent=DATA_DIR)
 API_KEY_HEADER, API_KEY = init_api_key("API_KEY_FILE", "/run/secrets/apikey")
-ANNOUNCER_FILE = "announcer"
-ANNOUNCER_PATH = os.path.join(DATA_DIR, ANNOUNCER_FILE)
+
 
 @app.get("/")
 async def lifesign():
     return Response(status_code=status.HTTP_200_OK)
 
 
+async def refresh_interested():
+    t = time.time()
+    while len(interested) != 0 \
+        and t - interested[0] > INTERESTED_TIMEOUT:
+        interested.pop(0)
+
+
 @app.post("/interested", status_code=status.HTTP_200_OK)
 async def post_interested():
-    if (len(interested) >= INTERESTED_MAX):
-        return INTERESTED_MAX
+    refresh_interested()
+    if len(interested) > INTERESTED_MAX:
+        return
     interested.append(time.time())
-    return len(interested)
 
 
 @app.get("/interested/amount", status_code=status.HTTP_200_OK)
 async def get_interested_amount():
-    await refresh_interested(interested)
+    await refresh_interested()
     return len(interested)
 
 
@@ -152,22 +142,44 @@ async def get_coffee_image():
     return FileResponse(path=image_path)
 
 
-ANNOUNCER_CHANNEL = "announcer"
+class PubSub:
+    """
+    Simple observer pattern implementation in asyncio.
+    """
+
+    def __init__(self):
+        self.subscribers = set()
+
+    def subscribe(self):
+        queue = asyncio.Queue()
+        self.subscribers.add(queue)
+        return queue
+
+    def unsubscribe(self, queue):
+        self.subscribers.discard(queue)
+
+    async def publish(self, message):
+        for queue in self.subscribers:
+            await queue.put(message)
+
+
+pubsub = PubSub()
 
 
 @app.get("/announcer/new")
-async def new_message(msg: str, redis_conn: Annotated[PoolConnectionDep, redis_connection]):
-    await redis_conn.publish(ANNOUNCER_CHANNEL, msg)
+async def new_message(msg: str):
+    await pubsub.publish(msg)
 
 
 @app.websocket("/announcer/listen")
-async def listen_messages(websocket: WebSocket, redis_conn: Annotated[PoolConnectionDep, redis_connection]):
+async def listen_messages(websocket: WebSocket):
     await websocket.accept()
+    queue = pubsub.subscribe()
 
-    async with redis_conn.pubsub() as pubsub:
-        await pubsub.subscribe(ANNOUNCER_CHANNEL)
-        async for message in pubsub.listen():
-            if not message or type(message["data"]) != bytes:
-                continue
-            decoded_message = message["data"].decode()
-            await websocket.send_text(decoded_message)
+    try:
+        while True:
+            message = await queue.get()
+            await websocket.send_text(message)
+    finally:
+        pubsub.unsubscribe(queue)
+

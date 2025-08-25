@@ -1,4 +1,3 @@
 fastapi[standard]
 aiofiles
 pillow
-fakeredis

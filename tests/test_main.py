@@ -3,15 +3,9 @@ from unittest import mock
 from io import BytesIO
 from fastapi import status
 from fastapi.testclient import TestClient
-from app.main import app, redis_connection
+from app.main import app
 from app.seuranta import SeurantaUser, SeurantaUsers
 from PIL import Image, ImageChops
-from fakeredis import FakeAsyncRedis
-
-
-async def fakeredis_connection():
-    async with FakeAsyncRedis() as connection:
-        yield connection
 
 
 class TestKattilaLifesignApi(unittest.TestCase):
@@ -189,7 +183,6 @@ class TestKattilaAnnouncerApi(unittest.TestCase):
 
     def setUp(self) -> None:
         with TestClient(app) as client1, TestClient(app) as client2:
-            mock.patch.dict(app.dependency_overrides, {redis_connection: fakeredis_connection})
             self.client1 = client1
             self.client2 = client2
 
