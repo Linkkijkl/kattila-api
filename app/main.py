@@ -15,7 +15,7 @@ seuranta_users: SeurantaUsers = SeurantaUsers()
 
 INTERESTED_MAX = 10
 INTERESTED_TIMEOUT = 15 * 60
-interested = []
+interested: list[float] = []
 
 
 def init_dir(name: str, default: str, parent=None):
@@ -182,4 +182,3 @@ async def listen_messages(websocket: WebSocket):
             await websocket.send_text(message)
     finally:
         pubsub.unsubscribe(queue)
-

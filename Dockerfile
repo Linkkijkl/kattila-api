@@ -10,4 +10,4 @@ RUN uv pip install --system --no-cache-dir --upgrade -r /code/requirements.txt
 COPY ./app /code/app
 
 # See <https://fastapi.tiangolo.com/deployment/docker/#behind-a-tls-termination-proxy>
-CMD ["fastapi", "run", "app/main.py", "--proxy-headers", "--workers", 4, "--port", "5100", "--host", "0.0.0.0"]
+CMD ["fastapi", "run", "app/main.py", "--proxy-headers", "--workers", "1", "--port", "5100", "--host", "0.0.0.0"]
