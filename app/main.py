@@ -78,6 +78,7 @@ async def post_interested():
     if len(interested) >= INTERESTED_MAX:
         return
     interested.append(time.time())
+    return len(interested)
 
 
 @app.get("/interested/amount", status_code=status.HTTP_200_OK)
