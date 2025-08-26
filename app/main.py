@@ -75,7 +75,7 @@ async def refresh_interested():
 @app.post("/interested", status_code=status.HTTP_200_OK)
 async def post_interested():
     refresh_interested()
-    if len(interested) > INTERESTED_MAX:
+    if len(interested) >= INTERESTED_MAX:
         return
     interested.append(time.time())
 
