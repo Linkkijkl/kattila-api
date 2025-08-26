@@ -76,7 +76,7 @@ async def refresh_interested():
 async def post_interested():
     refresh_interested()
     if len(interested) >= INTERESTED_MAX:
-        return
+        return len(interested)
     interested.append(time.time())
     return len(interested)
 
