@@ -1,13 +1,15 @@
 """Brief: FAST-API based microservice for the Kattila happenings."""
 import os, secrets, time
 
-from fastapi import FastAPI, Security, UploadFile, HTTPException, status, WebSocket, Depends
+from fastapi import FastAPI, Security, UploadFile, HTTPException, status, WebSocket
 from fastapi.responses import Response, FileResponse
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.seuranta import SeurantaUsers
 import aiofiles
 import asyncio
+from pathlib import Path
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"])
@@ -183,3 +185,9 @@ async def listen_messages(websocket: WebSocket):
             await websocket.send_text(message)
     finally:
         pubsub.unsubscribe(queue)
+
+
+stream_path = Path("./stream")
+if not stream_path.exists():
+    stream_path.mkdir()
+app.mount("/stream", StaticFiles(directory="stream"), name="stream")
