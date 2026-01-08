@@ -1,5 +1,8 @@
 # Kattila API
 
+![tests](https://github.com/Linkkijkl/kattila-api/actions/workflows/tests.yml/badge.svg)
+![deployment](https://github.com/Linkkijkl/kattila-api/actions/workflows/deploy.yml/badge.svg)
+
 ## Contributing
 
 - Use rebase merges
