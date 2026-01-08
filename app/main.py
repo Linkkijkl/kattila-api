@@ -47,7 +47,7 @@ def init_api_key(name, default):
     Returns:
         A tuple containing the api-key-header and api-key respectively.
     """
-    header = APIKeyHeader(name="X-API-Key")
+    header = APIKeyHeader(name="X-API-Key", auto_error=False)
     if not (path := os.getenv(name)):
         path = default
     with open(path, "r") as key_file:
@@ -101,9 +101,11 @@ async def get_seuranta_users():
 
 @app.put("/seuranta/users", status_code=status.HTTP_200_OK)
 async def put_seuranta_users(users: SeurantaUsers, key: str = Security(API_KEY_HEADER)):
+    if key is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     authorized = secrets.compare_digest(key, API_KEY)
     if not authorized:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     seuranta_users.users = users.users
     return seuranta_users
@@ -111,9 +113,11 @@ async def put_seuranta_users(users: SeurantaUsers, key: str = Security(API_KEY_H
 
 @app.put("/coffee/image")
 async def update_coffee_image(file: UploadFile, key: str = Security(API_KEY_HEADER)):
+    if not key:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     authorized = secrets.compare_digest(key, API_KEY)
     if not authorized:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     ACCEPTED_FILE_TYPES = ["image/jpeg", "image/webp", "image/png"]
     if not file.content_type in ACCEPTED_FILE_TYPES:

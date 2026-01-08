@@ -67,18 +67,18 @@ class TestKattilaSeurantaApi(unittest.TestCase):
         response = self.client.put(
             "/seuranta/users", content=self.testing_seuranta_users.model_dump_json()
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json(), {"detail": "Not authenticated"})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json(), {"detail": "Unauthorized"})
 
     def test_seuranta_endpoint_put_wrong_api_key_headers(self):
-        incorrect_headers = {"X-API-Key": "UNAUTHORIZED_KEY"}
+        incorrect_headers = {"X-API-Key": "FORBIDDEN_KEY"}
         response = self.client.put(
             "/seuranta/users",
             content=self.testing_seuranta_users.model_dump_json(),
             headers=incorrect_headers,
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(response.json(), {"detail": "Unauthorized"})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json(), {"detail": "Forbidden"})
 
     def test_seuranta_endpoint_put_correct_api_key_headers(self):
         response = self.client.put(
@@ -136,16 +136,16 @@ class TestKattilaCoffeeImageApi(unittest.TestCase):
 
     def test_coffee_image_endpoint_put_missing_api_key_headers(self):
         response = self.client.put("/coffee/image", files=self.test_white_image_file)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json(), {"detail": "Not authenticated"})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json(), {"detail": "Unauthorized"})
 
     def test_coffee_image_endpoint_put_wrong_api_key_headers(self):
-        incorrect_headers = {"X-API-Key": "UNAUTHORIZED_KEY"}
+        incorrect_headers = {"X-API-Key": "FORBIDDEN_KEY"}
         response = self.client.put(
             "/coffee/image", headers=incorrect_headers, files=self.test_white_image_file
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(response.json(), {"detail": "Unauthorized"})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json(), {"detail": "Forbidden"})
 
     def test_coffee_image_endpoint_put_correct_api_key_headers(self):
         response = self.client.put(
